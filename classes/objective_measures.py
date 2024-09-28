@@ -20,7 +20,7 @@ class BodyMassIndex(Measurements):
         super().__init__(weight, height)
 
     def calculate(self):
-        self.bmi = self.weight / ((self.height / 100) ** 2)
+        self.bmi = round(self.weight / ((self.height / 100) ** 2), 2)
         if self.bmi >= 40:
             self.bmi_rating = "Obese III"
         elif self.bmi > 35:
@@ -53,7 +53,7 @@ class WaistToHip(Measurements):
         self.sex = sex
 
     def calculate(self):
-        self.whr = self.waist / self.hip
+        self.whr = round(self.waist / self.hip, 2)
 
         if self.sex == "f":
             if self.whr <= 0.8:

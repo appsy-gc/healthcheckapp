@@ -1,8 +1,10 @@
 from colored import Fore, Back, Style
 import json
-from classes.person import Person, Female, Male
+from rich import print_json
+import pandas as pd
+from classes.person import Female, Male
 from classes.subjective_measures import APSSLevel1
-from classes.objective_measures import Measurements, BodyMassIndex, WaistToHip, HeartRate
+from classes.objective_measures import BodyMassIndex, WaistToHip, HeartRate
 
 # Set up colors
 color1: str = f"{Style.BOLD}{Back.GREEN}"
@@ -146,18 +148,21 @@ def execute_and_save():
     except FileNotFoundError:
         # Create new file if one does not exist
         data = []
+    # Collect user data
     user_data = new_user()
     questionnaire_data = questionnaire()
     measurement_data = measurements(user_data)
+    # Merge data into a single dictionary
     merged_data = user_data.copy()
     merged_data.update(questionnaire_data)
     merged_data.update(measurement_data)
-
+    # Add new dictionary to json file
     data.append(merged_data)
     with open("files/health_records.json", "w") as file:
         json.dump(data, file, indent=4)
-
-    return print("File Saved")
+    # Print results to user
+    print("\nHere are your results: ")
+    print_json(json.dumps(merged_data, indent=4))
 
 
 def import_csv():
@@ -168,9 +173,24 @@ def import_csv():
 
 
 def print_results():
-    print("\nHere are your results: \n")
+    name = input("Enter your account name to see your record: ").lower()
 
-    # Load and print json file
+    with open("files/health_records.json") as file:
+        data = json.load(file)
+
+    found = False
+    i = 0
+
+    for list in data:
+        if list["name"].lower() == name:
+            print("File located. Here are your results: ")
+            print_json(json.dumps(data[i]))
+            # rprint(json.dumps(data[i], indent=4))
+            found = True
+        i += 1
+    
+    if not found:
+        print("File Not Found")
 
 
 
