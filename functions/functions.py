@@ -166,9 +166,35 @@ def execute_and_save():
 
 
 def import_csv():
-    print("\nImport your CSV: \n")
+    # Instruct user how to create the csv
+    print("\nTo add your information via a csv file, follow these steps: ")
+    print(f"{color2}\nStep 1 -{Style.reset} Create a spreadsheet using MS Excel or Google Sheets, which must have the following headings (ignore the first 0) :")
+    csv_file = pd.read_csv("files/example.csv")
+    print(csv_file)
+    pause = input("\nPress any key to continue to the next step...")
+    print(f"{color2}\nStep 2 -{Style.reset} Download as a csv file.")
+    pause = input("\nPress any key to continue to the next step...")
+    # Ask user for filepath to csv
+    print(f"{color2}\nStep 3 -{Style.reset} Paste the filepath below (Use Google to find out how to get the filepath for your file)")
+    # Exception handling for this later on when the app tries to access it
+    file_path = input("\nFilepath: ")
+    pause = input("\nPress any key to continue to the next step...")
+    print(f"{color2}\nImportant:{Style.reset} If you do not create the csv file correctly or use the correct path, this will not work and you will need to manually enter the information by selecting option 1 at the main menu.")
+    # Load csv
+    # Exception for incorrect filepath or no file.
+    try:
+        user_file = pd.read_csv(file_path)
+        csv_data = user_file.to_dict(orient="records")
+        print("Here is the information you provided: ")
+        print_json(json.dumps(csv_data, indent=4))
+    except FileNotFoundError:
+        print(f"{color2}Error: {Style.reset} the file {file_path} was not found.")
 
-    # ???
+    # Use data from csv and run through classes
+
+    # Return merged data and append to json file
+
+    # Print results - similar to end of execuse_and_save()
 
 
 
