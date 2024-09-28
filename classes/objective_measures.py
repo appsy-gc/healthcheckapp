@@ -21,22 +21,65 @@ class BodyMassIndex(Measurements):
 
     def calculate(self):
         self.bmi = self.weight / ((self.height / 100) ** 2)
-        return self.bmi
+        if self.bmi >= 40:
+            self.bmi_rating = "Obese III"
+        elif self.bmi > 35:
+            self.bmi_rating = "Obese II"
+        elif self.bmi > 30:
+            self.bmi_rating = "Obese I"
+        elif self.bmi > 25:
+            self.bmi_rating = "Overweight"
+        elif self.bmi > 18.5:
+            self.bmi_rating = "Healthy weight"
+        else:
+            self.bmi_rating = "Underweight"
+
+        self.bmi_data = {
+            "weight": self.weight,
+            "height": self.height,
+            "bmi": self.bmi,
+            "bmi_rating": self.bmi_rating
+        }
+
+        return self.bmi_data
 
     def __str__(self):
         return f"Your BMI is {self.bmi:.2f}"
 
 # Child class that calculates waist circumference from all measurements
 class WaistToHip(Measurements):
-    def __init__(self, hip, waist):
+    def __init__(self, hip, waist, sex):
         super().__init__(weight=None, height=None, hip=hip, waist=waist)
+        self.sex = sex
 
     def calculate(self):
         self.whr = self.waist / self.hip
-        return self.whr
+
+        if self.sex == "f":
+            if self.whr <= 0.8:
+                self.whr_rating = "Low Health Risk"
+            if self.whr < 0.86:
+                self.whr_rating = "Moderate Health Risk"
+            else:
+                self.whr_rating = "High Health Risk"
+        else:
+            if self.whr <= 0.95:
+                self.whr_rating = "Low Health Risk"
+            if self.whr < 1.0:
+                self.whr_rating = "Moderate Health Risk"
+            else:
+                self.whr_rating = "High Health Risk"
+
+        self.whr_data = {
+            "hip": self.hip,
+            "waist": self.waist,
+            "whr": self.whr,
+            "whr_rating": self.whr_rating
+        }
+        return self.whr_data
     
     def __str__(self):
-        return f"Your waist to hip ratio is: {self.whr}"
+        return f"Your waist to hip ratio is: {self.whr:.2f}, {self.whr_rating}"
 
 # Child class that calculates max heart rate
 class HeartRate(Measurements):
@@ -50,7 +93,12 @@ class HeartRate(Measurements):
             self.hr_rating = "Normal Heart Rate"
         else:
             self.hr_rating = "Low Heart Rate"
-        return self.hr_rating
+
+        self.hr_data = {
+            "heart_rate": self.heart_rate,
+            "hr_rating": self.hr_rating
+        }
+        return self.hr_data
         
     def __str__(self):
         return f"Your resting heart rate rating is: {self.hr_rating}"

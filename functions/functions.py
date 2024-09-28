@@ -1,4 +1,5 @@
 from colored import Fore, Back, Style
+import json
 from classes.person import Person, Female, Male
 from classes.subjective_measures import APSSLevel1
 from classes.objective_measures import Measurements, BodyMassIndex, WaistToHip, HeartRate
@@ -29,7 +30,8 @@ def menu():
             case "1":
                 # new_user()
                 # questionnaire()
-                measurements()
+                # measurements()
+                execute_and_save()
                 break
             case "2":
                 import_csv()
@@ -60,8 +62,17 @@ def new_user():
         sex = "female"
         new_person = Female(name, age, sex)
 
-    new_person.risk_cat()
-    return print(new_person)
+    # Assign risk category based on age and sex
+    health_risk = new_person.risk_cat()
+    # Set up list for json
+    user_data = {
+        "name": name, 
+        "age": age, 
+        "sex": sex, 
+        "chronic_risk": health_risk
+        }
+
+    return user_data
 
 
 
@@ -86,12 +97,13 @@ def questionnaire():
     question6 = get_yes_no_input("6. Do you have any other conditions that may require special consideration for you to exercise? (Y/N): ")
 
     risk_level = APSSLevel1(question1, question2, question3, question4, question5, question6)
-    risk_level.assess_questions()
-    return print(risk_level)
+    health_risk = risk_level.assess_questions()
+
+    return health_risk
 
 
 
-def measurements():
+def measurements(user_data):
     print(f"{color1}\n>>> BODY MEASUREMENTS <<<{Style.reset}\n")
     print("Please provide the required measurements below.\n")
 
@@ -110,15 +122,42 @@ def measurements():
     heart_rate = get_measure_input("Please enter your resting heart rate in beats per min: ")
 
     new_bmi = BodyMassIndex(weight, height)
-    new_bmi.calculate()
+    bmi_data = new_bmi.calculate()
 
-    new_whr = WaistToHip(hip, waist)
-    new_whr.calculate()
-
+    new_whr = WaistToHip(hip, waist, user_data["sex"])
+    whr_data = new_whr.calculate()
+    
     new_hr_rating = HeartRate(heart_rate)
-    new_hr_rating.calculate()
-    return print(f"{new_bmi}. {new_whr}. {new_hr_rating}")
+    hr_rating_data = new_hr_rating.calculate()
 
+    merged_measure_data = bmi_data.copy()
+    merged_measure_data.update(whr_data)
+    merged_measure_data.update(hr_rating_data)
+
+    return merged_measure_data
+
+
+def execute_and_save():
+    # Add data to new json
+    try:
+    #     # Load json and assign data to data
+        with open("files/health_records.json") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        # Create new file if one does not exist
+        data = []
+    user_data = new_user()
+    questionnaire_data = questionnaire()
+    measurement_data = measurements(user_data)
+    merged_data = user_data.copy()
+    merged_data.update(questionnaire_data)
+    merged_data.update(measurement_data)
+
+    data.append(merged_data)
+    with open("files/health_records.json", "w") as file:
+        json.dump(data, file, indent=4)
+
+    return print("File Saved")
 
 
 def import_csv():

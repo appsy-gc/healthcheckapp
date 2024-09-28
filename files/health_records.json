@@ -1,3 +1,25 @@
 [
-    
+    {
+        "name": "",
+        "age": 0,
+        "sex": "",
+        "chronic_risk": "",
+        "heart_condition": "",
+        "chest_pains": "",
+        "dizzy": "",
+        "asthma": "",
+        "diabetes": "",
+        "other_conditions": "",
+        "health_risk": "",
+        "weight": 0,
+        "height": 0,
+        "bmi": 0.0,
+        "bmi_rating": "",
+        "hip": 0,
+        "waist": 0,
+        "whr": 0.0,
+        "whr_rating": "",
+        "heart_rate": 0,
+        "hr_rating": ""
+    }
 ]
