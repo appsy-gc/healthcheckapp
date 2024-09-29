@@ -21,6 +21,7 @@ class BodyMassIndex(Measurements):
 
     def calculate(self):
         self.bmi = round(self.weight / ((self.height / 100) ** 2), 2)
+
         if self.bmi >= 40:
             self.bmi_rating = "Obese III"
         elif self.bmi > 35:

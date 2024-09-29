@@ -11,6 +11,7 @@ color1: str = f"{Style.BOLD}{Back.GREEN}"
 color2: str = f"{Style.BOLD}{Fore.RED}"
 color3: str = f"{Style.BOLD}{Fore.YELLOW}"
 
+
 def menu():
     # Create Menu
     # - 1. Complete the Questionnaire
@@ -47,12 +48,49 @@ def menu():
                 print(f"{color2}Invalid choice:{Style.reset} Please select a number between 1 and 5 (inclusive).\n")
     
 
+def check_name(name):
+    try:
+        with open("files/health_records.json") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = []
+    
+    for list in data:
+        if list["name"] == name:
+            found = True
+            break
+    else:
+        found = False
+
+    return found
+
+
 
 def new_user():
     print("\nPlease provide some basic information below\n")
     name = input("Enter your full name: ")
-    age = int(input("Enter your age: "))
-    sex = input("Enter your biological sex (M/F): ").lower()
+    # Ensure users enter a first and last name
+    while len(name.split()) != 2:
+         name = input(f"{color2}Invalid: {Style.reset}Enter only a firstname and lastname separated by a space: ")
+    while True:
+        age = input("Enter your age: ")
+        try:
+            age = int(age) 
+            break  
+        except ValueError:
+            print(f"\n{color2}Invalid: {Style.reset}Enter your age as a number only.\n")
+    # Ensure user provides the correct input
+    while True:
+        sex = input("Enter your biological sex (m/f): ").lower()
+        # Check if the input starts with 'm' or 'f'
+        if sex.startswith("m"):
+            sex = "m"
+            break
+        elif sex.startswith("f"):
+            sex = "f"
+            break
+        else:
+            print(f"\n{color2}Invalid: {Style.reset}Please enter 'm' for male or 'f' for female.")
 
     if sex == "m":
         sex = "male"
@@ -76,7 +114,7 @@ def new_user():
 
 
 def questionnaire():
-    print(f"{color1}\n>>> HEALTH QUESTIONNAIRE <<<{Style.reset}\n")
+    print(f"\n {color1}>>> HEALTH QUESTIONNAIRE <<<{Style.reset} \n")
     print(f"Please answer the following questions {color2}'Y'{Style.reset} or {color2}'N'{Style.reset}: ")
     
     def get_yes_no_input(prompt):
@@ -103,13 +141,17 @@ def questionnaire():
 
 
 def measurements(user_data):
-    print(f"{color1}\n>>> BODY MEASUREMENTS <<<{Style.reset}\n")
+    print(f"\n {color1}>>> BODY MEASUREMENTS <<<{Style.reset} \n")
     print("Please provide the required measurements below.\n")
-
+    # Ensure input is a number and is not zero to avoid a division error
     def get_measure_input(prompt):
         while True:
             try:
-                return float(input(prompt))
+                value = float(input(prompt))
+                if value == 0:
+                    print(f"\n{color2}Input cannot be zero.{Style.reset}\n")
+                else:
+                    return value
             except ValueError:
                 print(f"\n{color2}Please only enter numbers.{Style.reset}\n")
 
@@ -122,10 +164,8 @@ def measurements(user_data):
 
     new_bmi = BodyMassIndex(weight, height)
     bmi_data = new_bmi.calculate()
-
     new_whr = WaistToHip(hip, waist, user_data["sex"])
     whr_data = new_whr.calculate()
-    
     new_hr_rating = HeartRate(heart_rate)
     hr_rating_data = new_hr_rating.calculate()
 
@@ -134,6 +174,7 @@ def measurements(user_data):
     merged_measure_data.update(hr_rating_data)
 
     return merged_measure_data
+    
 
 
 def execute_and_save():
@@ -147,19 +188,22 @@ def execute_and_save():
         data = []
     # Collect user data
     user_data = new_user()
-    questionnaire_data = questionnaire()
-    measurement_data = measurements(user_data)
-    # Merge data into a single dictionary
-    merged_data = user_data.copy()
-    merged_data.update(questionnaire_data)
-    merged_data.update(measurement_data)
-    # Add new dictionary to json file
-    data.append(merged_data)
-    with open("files/health_records.json", "w") as file:
-        json.dump(data, file, indent=4)
-    # Print results to user
-    print("\nHere are your results: ")
-    print_json(json.dumps(merged_data, indent=4))
+    if check_name(user_data["name"]):
+        return print(f"\n{color2}ERROR: {Style.reset}Name already exists.\n")
+    else:
+        questionnaire_data = questionnaire()
+        measurement_data = measurements(user_data)
+        # Merge data into a single dictionary
+        merged_data = user_data.copy()
+        merged_data.update(questionnaire_data)
+        merged_data.update(measurement_data)
+        # Add new dictionary to json file
+        data.append(merged_data)
+        with open("files/health_records.json", "w") as file:
+            json.dump(data, file, indent=4)
+        # Print results to user
+        print("\nHere are your results: ")
+        print_json(json.dumps(merged_data, indent=4))
 
 
 def import_csv():
@@ -380,8 +424,3 @@ def update_measures():
                 print("\nSuccessfully Cancelled\n")
             case _:
                 print(f"{color2}An Error has Occurred{Style.reset}")
-    # New measurement given
-    # print_json(json.dumps(health_record, indent=4))
-    # json file loaded and measurement overwritten
-
-    # new results displayed to user
