@@ -17,7 +17,16 @@ try:
     menu()
 except ZeroDivisionError:
     print(f"\n{color2}ERROR:{Style.reset} Cannot Divide by Zero. \nMeasurements cannot be zero. \nTry Again.")
-
+except KeyboardInterrupt:
+    print(f"\n {color2}>>> Program Terminated <<<{Style.reset} ")
+except OSError:
+    print(f"\n{color2}SYSTEM ERROR:{Style.reset} Try Again.")
+except SystemError:
+    print(f"\n{color2}SYSTEM ERROR:{Style.reset} Try Again.")
+except RuntimeError:
+    print(f"\n{color2}RUNTIME ERROR:{Style.reset} Try Again.")
+except OverflowError:
+    print(f"\n{color2}OVERFLOW ERROR:{Style.reset} Check the information you are entering and try again.")
 
 
 

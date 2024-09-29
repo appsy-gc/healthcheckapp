@@ -64,6 +64,29 @@ def check_name(name):
 
     return found
 
+# Ensure input is a number and is not zero to avoid a division error
+def get_measure_input(prompt):
+    while True:
+        try:
+            value = float(input(prompt))
+            if value <= 0:
+                print(f"\n{color2}Input cannot be zero or negative.{Style.reset}\n")
+            else:
+                return value
+        except ValueError:
+            print(f"\n{color2}Please only enter numbers greater than zero.{Style.reset}\n")
+
+# Ensure age is a number and greater than zero
+def check_age(prompt):
+    while True:
+        try:
+            value = int(input(prompt))
+            if value <= 0:
+                print(f"\n{color2}Age cannot be zero or negative.{Style.reset}\n")
+            else:
+                return value
+        except ValueError:
+            print(f"\n{color2}Please only enter numbers greater than zero.{Style.reset}\n")
 
 
 def new_user():
@@ -72,14 +95,7 @@ def new_user():
     # Ensure users enter a first and last name
     while len(name.split()) != 2:
          name = input(f"{color2}Invalid: {Style.reset}Enter only a firstname and lastname separated by a space: ")
-    while True:
-        age = input("Enter your age: ")
-        try:
-            age = int(age) 
-            break  
-        except ValueError:
-            print(f"\n{color2}Invalid: {Style.reset}Enter your age as a number only.\n")
-    # Ensure user provides the correct input
+    age = check_age("Enter your age: ")
     while True:
         sex = input("Enter your biological sex (m/f): ").lower()
         # Check if the input starts with 'm' or 'f'
@@ -143,17 +159,7 @@ def questionnaire():
 def measurements(user_data):
     print(f"\n {color1}>>> BODY MEASUREMENTS <<<{Style.reset} \n")
     print("Please provide the required measurements below.\n")
-    # Ensure input is a number and is not zero to avoid a division error
-    def get_measure_input(prompt):
-        while True:
-            try:
-                value = float(input(prompt))
-                if value == 0:
-                    print(f"\n{color2}Input cannot be zero.{Style.reset}\n")
-                else:
-                    return value
-            except ValueError:
-                print(f"\n{color2}Please only enter numbers.{Style.reset}\n")
+    
 
     # Get input from user for body measurements + error handling
     weight = get_measure_input("Please enter your weight in kg: ")
@@ -217,10 +223,10 @@ def import_csv():
     input("\nPress any key to continue to the next step...")
     # Ask user for filepath to csv
     print(f"{color2}\nStep 3 -{Style.reset} Paste the filepath below (Use Google to find out how to get the filepath for your file)")
-    # Exception handling for this later on when the app tries to access it
-    file_path = input("\nFilepath: ")
-    input("\nPress any key to continue to the next step...")
     print(f"{color2}\nImportant:{Style.reset} If you do not create the csv file correctly or use the correct path, this will not work and you will need to manually enter the information by selecting option 1 at the main menu.")
+    # Exception handling for this later on when the app tries to access it
+    file_path = input(f"\n{color3}Filepath: {Style.reset}")
+    # input("\nPress any key to continue to the next step...")
     # Load csv
     # Exception for incorrect filepath or no file.
     try:
@@ -270,15 +276,21 @@ def import_csv():
         print(f"\n{color2}Here are your results: {Style.reset}")
         print_json(json.dumps(merged_measure_data, indent=4))
     except FileNotFoundError:
-        print(f"{color2}Error: {Style.reset} the file {file_path} was not found. Enter data manually or try again.")
+        print(f"\n{color2}Error: {Style.reset} the file {file_path} was not found. Enter data manually or try again.\n")
+    except TypeError:
+            print(f"\n{color2}ERROR:{Style.reset} Incorrect data in file. Check values and try again.\n")
+    except ValueError:
+        print(f"\n{color2}ERROR:{Style.reset} Incorrect data in file. Check values and try again.\n")
 
 
 
 def print_results():
     name = input("Enter your account name to see your record: ").lower()
-
-    with open("files/health_records.json") as file:
-        data = json.load(file)
+    try:
+        with open("files/health_records.json") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = []
 
     found = False
     i = 0
@@ -292,13 +304,13 @@ def print_results():
         i += 1
     
     if not found:
-        print("File Not Found")
+        print(f"\n{color2}Record Not Found.{Style.reset}\n")
 
 
 
 def update_measures():
     print(f"\n{color1}Time to update your measurements?{Style.reset}\n")
-    print("You can only do this for one measure ment at a time\n")
+    print("You can only do this for one measurement at a time\n")
     # Must enter their name to locate the correct record in json
     # Remove their record temporarily and append it again once complete
     name = input("Please enter your name so we can locate your file: ").lower()
@@ -311,7 +323,7 @@ def update_measures():
             data.remove(list)
             break
     else:
-        print(f"{color2}Record Not Found{Style.reset}")
+        print(f"{color2}Record Not Found.{Style.reset}\n")
         print("Please try again or create a new record.\n")
         found = False
     if found:
@@ -332,7 +344,7 @@ def update_measures():
         match choice:
             case 1:
                 # Get new age
-                new_age = int(input("Enter your new age: "))
+                new_age = check_age("Enter your new age: ")
                 health_record["age"] = new_age          
                 # Run through User child class for health risk
                 if health_record["sex"] == "male":
@@ -351,7 +363,7 @@ def update_measures():
                 print_json(json.dumps(health_record, indent=4))
             case 2:
                 # Get new weight
-                new_weight = int(input("Enter your new weight in kg: "))
+                new_weight = get_measure_input("Enter your new weight in kg: ")
                 health_record["weight"] = new_weight          
                 # Run through User child class for health risk
                 updated_measure = BodyMassIndex(health_record["weight"], health_record["height"])
@@ -367,7 +379,7 @@ def update_measures():
                 print_json(json.dumps(health_record, indent=4))
             case 3:
                 # Get new hip measurement
-                new_hip = int(input("Enter your new hip circumference in cm: "))
+                new_hip = get_measure_input("Enter your new hip circumference in cm: ")
                 health_record["hip"] = new_hip       
                 # Run through User child class for health risk
                 if health_record["sex"] == "f":
@@ -387,7 +399,7 @@ def update_measures():
                 print_json(json.dumps(health_record, indent=4))
             case 4:
                 # Get new waist measurement
-                new_waist = int(input("Enter your new waist circumference in cm: "))
+                new_waist = get_measure_input("Enter your new waist circumference in cm: ")
                 health_record["waist"] = new_waist      
                 # Run through User child class for health risk
                 if health_record["sex"] == "f":
@@ -407,7 +419,7 @@ def update_measures():
                 print_json(json.dumps(health_record, indent=4))
             case 5:
                 # Get new resting heart rate
-                new_rhr = int(input("Enter your new resting heart rate in bpm: "))
+                new_rhr = get_measure_input("Enter your new resting heart rate in bpm: ")
                 health_record["heart_rate"] = new_rhr        
                 # Run through User child class for health risk
                 updated_measure = HeartRate(health_record["heart_rate"])
@@ -423,4 +435,4 @@ def update_measures():
             case 6:
                 print("\nSuccessfully Cancelled\n")
             case _:
-                print(f"{color2}An Error has Occurred{Style.reset}")
+                print(f"{color2}An Error has Occurred.{Style.reset} Try running the program again.")
