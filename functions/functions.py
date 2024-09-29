@@ -1,6 +1,8 @@
 from colored import Fore, Back, Style
 import json
 from rich import print_json
+import os
+from prettytable import PrettyTable
 import pandas as pd
 from classes.person import Female, Male
 from classes.subjective_measures import APSSLevel1
@@ -14,6 +16,7 @@ color3: str = f"{Style.BOLD}{Fore.YELLOW}"
 
 def menu():
     # Create Menu
+    print(f" {color1}>>> MAIN MENU <<<{Style.reset}\n")
     # - 1. Complete the Questionnaire
     print("1. Complete the Questionnaire")
     # - 2. Import measurements from csv
@@ -89,24 +92,32 @@ def check_age(prompt):
             print(f"\n{color2}Please only enter numbers greater than zero.{Style.reset}\n")
 
 
+
+def get_user_input(prompt, validation_fn):
+    while True:
+        user_input = input(prompt)
+        if validation_fn(user_input):
+            return user_input
+        else:
+            print(f"\n{color2}Invalid input. Please try again.{Style.reset}\n")
+
+
+
+def get_name():
+    return get_user_input("Enter your full name: ", lambda x: len(x.split()) == 2)
+
+
+
+def get_sex():
+    return get_user_input("Enter your biological sex (m/f): ", lambda x: x.lower() in ["m", "f"]).lower()
+
+
+
 def new_user():
     print("\nPlease provide some basic information below\n")
-    name = input("Enter your full name: ")
-    # Ensure users enter a first and last name
-    while len(name.split()) != 2:
-         name = input(f"{color2}Invalid: {Style.reset}Enter only a firstname and lastname separated by a space: ")
+    name = get_name()
     age = check_age("Enter your age: ")
-    while True:
-        sex = input("Enter your biological sex (m/f): ").lower()
-        # Check if the input starts with 'm' or 'f'
-        if sex.startswith("m"):
-            sex = "m"
-            break
-        elif sex.startswith("f"):
-            sex = "f"
-            break
-        else:
-            print(f"\n{color2}Invalid: {Style.reset}Please enter 'm' for male or 'f' for female.")
+    sex = get_sex()
 
     if sex == "m":
         sex = "male"
@@ -213,11 +224,19 @@ def execute_and_save():
 
 
 def import_csv():
+    # Create a table instance for an example for user
+    table = PrettyTable()
+
+    # Add headers (first row)
+    table.field_names = ["Name", "Age", "Sex (m or f)", "Weight (kg)", "Height (cm)", "Hip (cm)", "Waist (cm)", "Heart Rate (bpm)"]
+
+    # Add the data (second row)
+    table.add_row(["Justin Case", 99, "m", 90, 190, 90, 70, 80])
+
     # Instruct user how to create the csv
     print("\nTo add your information via a csv file, follow these steps: ")
     print(f"{color2}\nStep 1 -{Style.reset} Create a spreadsheet using MS Excel or Google Sheets, which must have the following headings (ignore the first 0) :")
-    csv_file = pd.read_csv("files/example.csv")
-    print(csv_file)
+    print(table)
     input("\nPress any key to continue to the next step...")
     print(f"{color2}\nStep 2 -{Style.reset} Download as a csv file.")
     input("\nPress any key to continue to the next step...")
@@ -226,7 +245,10 @@ def import_csv():
     print(f"{color2}\nImportant:{Style.reset} If you do not create the csv file correctly or use the correct path, this will not work and you will need to manually enter the information by selecting option 1 at the main menu.")
     # Exception handling for this later on when the app tries to access it
     file_path = input(f"\n{color3}Filepath: {Style.reset}")
-    # input("\nPress any key to continue to the next step...")
+    # Validate the file path
+    if not os.path.exists(file_path):
+        print(f"\n{color2}Invalid file path.{Style.reset} Please start again and provide a correct file path.")
+        return
     # Load csv
     # Exception for incorrect filepath or no file.
     try:
@@ -283,7 +305,6 @@ def import_csv():
         print(f"\n{color2}ERROR:{Style.reset} Incorrect data in file. Check values and try again.\n")
 
 
-
 def print_results():
     name = input("Enter your account name to see your record: ").lower()
     try:
@@ -307,132 +328,108 @@ def print_results():
         print(f"\n{color2}Record Not Found.{Style.reset}\n")
 
 
+# def update_field(health_record, field, new_value, data):
+#     health_record[field] = new_value
+#     data.append(health_record)
+#     with open("files/health_records.json", "w") as file:
+#         json.dump(data, file, indent=4)
+
 
 def update_measures():
     print(f"\n{color1}Time to update your measurements?{Style.reset}\n")
     print("You can only do this for one measurement at a time\n")
+    
     # Must enter their name to locate the correct record in json
-    # Remove their record temporarily and append it again once complete
     name = input("Please enter your name so we can locate your file: ").lower()
     with open("files/health_records.json") as file:
         data = json.load(file)
-    for list in data:
-        found = True
-        if list["name"].lower() == name:
-            health_record = list
-            data.remove(list)
+        
+    for record in data:
+        if record["name"].lower() == name:
+            health_record = record
+            # Remove the old record to avoid duplication
+            data.remove(record)  
             break
     else:
         print(f"{color2}Record Not Found.{Style.reset}\n")
-        print("Please try again or create a new record.\n")
-        found = False
-    if found:
-        # Print their record
-        print(f"\n{color2}Here is your record: {Style.reset}")
-        print_json(json.dumps(health_record, indent=4))
-        # User chooses what they want to update (weight, height or waist) from a list
-        print("What would you like to update?")
-        print("Choose from the list below\n")
-        print(f"{color2}1 - {Style.reset}Age")
-        print(f"{color2}2 - {Style.reset}Weight (kg)")
-        print(f"{color2}3 - {Style.reset}Hip Circumference (cm)")
-        print(f"{color2}4 - {Style.reset}Waist Circumference (cm)")
-        print(f"{color2}5 - {Style.reset}Resting Heart Rate (bpm)")
-        print(f"{color2}6 - {Style.reset}CANCEL\n")
-        choice = int(input(f"{color3}Enter your choice: {Style.reset}"))
-        # Take their choice and do something with it
-        match choice:
-            case 1:
-                # Get new age
-                new_age = check_age("Enter your new age: ")
-                health_record["age"] = new_age          
-                # Run through User child class for health risk
-                if health_record["sex"] == "male":
-                    updated_user = Male(health_record["name"], new_age, health_record["sex"])
-                    health_risk = updated_user.risk_cat()
-                else:
-                    updated_user = Female(health_record["name"], new_age, health_record["sex"])
-                    health_risk = updated_user.risk_cat()
-                # Update their local record
-                health_record["chronic_risk"] = health_risk 
-                # Update health record json
-                data.append(health_record)
-                with open("files/health_records.json", "w") as file:
-                    json.dump(data, file, indent=4)
-                print(f"\nHere is your {color2}UPDATED{Style.reset} record: ")
-                print_json(json.dumps(health_record, indent=4))
-            case 2:
-                # Get new weight
-                new_weight = get_measure_input("Enter your new weight in kg: ")
-                health_record["weight"] = new_weight          
-                # Run through User child class for health risk
-                updated_measure = BodyMassIndex(health_record["weight"], health_record["height"])
-                new_bmi = updated_measure.calculate()
-                # Update their local record
-                health_record["bmi"] = new_bmi["bmi"]
-                health_record["bmi_rating"] = new_bmi["bmi_rating"]
-                # Update health record json
-                data.append(health_record)
-                with open("files/health_records.json", "w") as file:
-                    json.dump(data, file, indent=4)
-                print(f"\nHere is your {color2}UPDATED{Style.reset} record: ")
-                print_json(json.dumps(health_record, indent=4))
-            case 3:
-                # Get new hip measurement
-                new_hip = get_measure_input("Enter your new hip circumference in cm: ")
-                health_record["hip"] = new_hip       
-                # Run through User child class for health risk
-                if health_record["sex"] == "f":
-                    updated_measure = WaistToHip(health_record["hip"], health_record["waist"], "f")
-                    new_whr = updated_measure.calculate()
-                else:
-                    updated_measure = WaistToHip(health_record["hip"], health_record["waist"], "m")
-                    new_whr = updated_measure.calculate()
-                # Update their local record
-                health_record["whr"] = new_whr["whr"]
-                health_record["whr_rating"] = new_whr["whr_rating"]
-                # Update health record json
-                data.append(health_record)
-                with open("files/health_records.json", "w") as file:
-                    json.dump(data, file, indent=4)
-                print(f"\nHere is your {color2}UPDATED{Style.reset} record: ")
-                print_json(json.dumps(health_record, indent=4))
-            case 4:
-                # Get new waist measurement
-                new_waist = get_measure_input("Enter your new waist circumference in cm: ")
-                health_record["waist"] = new_waist      
-                # Run through User child class for health risk
-                if health_record["sex"] == "f":
-                    updated_measure = WaistToHip(health_record["hip"], health_record["waist"], "f")
-                    new_whr = updated_measure.calculate()
-                else:
-                    updated_measure = WaistToHip(health_record["hip"], health_record["waist"], "m")
-                    new_whr = updated_measure.calculate()
-                # Update their local record
-                health_record["whr"] = new_whr["whr"]
-                health_record["whr_rating"] = new_whr["whr_rating"]
-                # Update health record json
-                data.append(health_record)
-                with open("files/health_records.json", "w") as file:
-                    json.dump(data, file, indent=4)
-                print(f"\nHere is your {color2}UPDATED{Style.reset} record: ")
-                print_json(json.dumps(health_record, indent=4))
-            case 5:
-                # Get new resting heart rate
-                new_rhr = get_measure_input("Enter your new resting heart rate in bpm: ")
-                health_record["heart_rate"] = new_rhr        
-                # Run through User child class for health risk
-                updated_measure = HeartRate(health_record["heart_rate"])
-                new_hr_rating = updated_measure.calculate()
-                # Update their local record
-                health_record["hr_rating"] = new_hr_rating["hr_rating"]
-                # Update health record json
-                data.append(health_record)
-                with open("files/health_records.json", "w") as file:
-                    json.dump(data, file, indent=4)
-                print(f"\nHere is your {color2}UPDATED{Style.reset} record: ")
-                print_json(json.dumps(health_record, indent=4))
-            case 6:
-                print("\nSuccessfully Cancelled\n")
-            case _:
-                print(f"{color2}An Error has Occurred.{Style.reset} Try running the program again.")
+        return
+
+    # Print the found record
+    print(f"\n{color2}Here is your record: {Style.reset}")
+    print_json(json.dumps(health_record, indent=4))
+
+    # User chooses what to update
+    print("What would you like to update?")
+    print("Choose from the list below\n")
+    print(f"{color2}1 - {Style.reset}Age")
+    print(f"{color2}2 - {Style.reset}Weight (kg)")
+    print(f"{color2}3 - {Style.reset}Hip Circumference (cm)")
+    print(f"{color2}4 - {Style.reset}Waist Circumference (cm)")
+    print(f"{color2}5 - {Style.reset}Resting Heart Rate (bpm)")
+    print(f"{color2}6 - {Style.reset}CANCEL\n")
+
+    choice = int(input(f"{color3}Enter your choice: {Style.reset}"))
+
+    # Process user choice
+    match choice:
+        case 1:
+            # Update Age
+            new_age = check_age("Enter your new age: ")
+            health_record["age"] = new_age
+            if health_record["sex"] == "male":
+                updated_user = Male(health_record["name"], new_age, health_record["sex"])
+            else:
+                updated_user = Female(health_record["name"], new_age, health_record["sex"])
+            health_record["chronic_risk"] = updated_user.risk_cat()
+
+        case 2:
+            # Update Weight and BMI
+            new_weight = get_measure_input("Enter your new weight in kg: ")
+            health_record["weight"] = new_weight
+            updated_measure = BodyMassIndex(health_record["weight"], health_record["height"])
+            new_bmi = updated_measure.calculate()
+            health_record["bmi"] = new_bmi["bmi"]
+            health_record["bmi_rating"] = new_bmi["bmi_rating"]
+
+        case 3:
+            # Update Hip Circumference and WHR
+            new_hip = get_measure_input("Enter your new hip circumference in cm: ")
+            health_record["hip"] = new_hip
+            updated_measure = WaistToHip(health_record["hip"], health_record["waist"], health_record["sex"])
+            new_whr = updated_measure.calculate()
+            health_record["whr"] = new_whr["whr"]
+            health_record["whr_rating"] = new_whr["whr_rating"]
+
+        case 4:
+            # Update Waist Circumference and WHR
+            new_waist = get_measure_input("Enter your new waist circumference in cm: ")
+            health_record["waist"] = new_waist
+            updated_measure = WaistToHip(health_record["hip"], health_record["waist"], health_record["sex"])
+            new_whr = updated_measure.calculate()
+            health_record["whr"] = new_whr["whr"]
+            health_record["whr_rating"] = new_whr["whr_rating"]
+
+        case 5:
+            # Update Resting Heart Rate
+            new_rhr = get_measure_input("Enter your new resting heart rate in bpm: ")
+            health_record["heart_rate"] = new_rhr
+            updated_measure = HeartRate(health_record["heart_rate"])
+            new_hr_rating = updated_measure.calculate()
+            health_record["hr_rating"] = new_hr_rating["hr_rating"]
+
+        case 6:
+            print("\nSuccessfully Cancelled\n")
+            return
+
+        case _:
+            print(f"{color2}An Error has Occurred.{Style.reset} Try running the program again.")
+            return
+
+    # After all updates, append the record once and write back to JSON
+    data.append(health_record)
+    with open("files/health_records.json", "w") as file:
+        json.dump(data, file, indent=4)
+
+    # Print updated record
+    print(f"\nHere is your {color2}UPDATED{Style.reset} record: ")
+    print_json(json.dumps(health_record, indent=4))

@@ -12,6 +12,7 @@ print("- Body Mass Index (BMI)")
 print("- Waist to hip ratio")
 print("- Heart rate rating")
 print("- Overall risk rating for your age and biological sex.\n")
+print("Check out the readme file for how to use this app and interpret the results.\n")
 print(f"{color2}Important Note:{Style.reset} This app does not diagnose medical conditions and does not share any of your information without written consent. This output from this app is to be used as a guide only and may suggest you seek guidance from a General Practitioner\n")
 try:
     menu()

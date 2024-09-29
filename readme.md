@@ -1,7 +1,7 @@
 # Health Check App
 This app is designed to take objective and subjective health information and provide health outputs and rating before starting and picking back up an exercise journey.
 
-To use it you must use terminal and load the libraries in requirements.txt. 
+To use it you must use terminal and load the libraries in requirements.txt. You must install python 3.10 or higher to use this app.
 
 You may optionally import certain metrics via a csv file on your computer. More instructions will be provided further on.
 
@@ -85,7 +85,7 @@ Your results will be printed once they are updated so you can view any changes t
 ### 5. Quit
 Ends the current session
 
-**Note**: At any time you can press ctrl + c (cmd + c on mac) to force quit the program.
+**Note**: At any time you can press ctrl + c to force quit the program.
 
 ## Understanding Your Results
 Here is an example of a record:
